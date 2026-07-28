@@ -8,6 +8,7 @@ A polished React app that turns a free-form travel request into a structured, in
 
 - Free-form trip prompt for destinations, dates, pace, budget, interests, and constraints.
 - Real LLM integration through a backend route/serverless function, so API keys are not exposed in browser code.
+- Demo fallback mode when `AI_API_KEY` is missing, so the hosted app still generates structured itineraries for reviewers.
 - Structured itinerary rendering with day tabs, stop cards, expandable details, route preview, and a trip brief modal.
 - Interactive editing: remove stops, move stops up/down, and drag-and-drop reorder stops within a day.
 - Resilient AI handling for malformed JSON, wrong shapes, empty responses, slow requests, provider failures, and stale responses.
@@ -55,7 +56,7 @@ Open:
 http://127.0.0.1:3000
 ```
 
-The sample itinerary works without an API key, so the UI can be reviewed immediately. AI generation requires `AI_API_KEY`.
+The sample itinerary and Generate button both work without an API key. Without `AI_API_KEY`, Generate uses a clearly marked demo itinerary fallback. With `AI_API_KEY`, Generate uses the real LLM provider.
 
 ## Deploy Online
 
@@ -77,12 +78,13 @@ This project is ready to host on Vercel without running the local Express server
    AI_API_BASE_URL=https://api.openai.com/v1
    AI_MODEL=gpt-4o-mini
    AI_TIMEOUT_MS=45000
+   AI_DISABLE_DEMO_FALLBACK=false
    AI_APP_TITLE=Trip Planner
    ```
 
 4. Deploy.
 
-The hosted app uses `api/generate-trip-plan.js` as the serverless AI endpoint. The browser calls `/api/generate-trip-plan`, and the API key stays in the hosting environment, not in the frontend bundle.
+The hosted app uses `api/generate-trip-plan.js` as the serverless AI endpoint. The browser calls `/api/generate-trip-plan`, and the API key stays in the hosting environment, not in the frontend bundle. If `AI_API_KEY` is not configured, the endpoint returns a demo itinerary with a warning instead of failing.
 
 GitHub Pages is not recommended for the full AI version because it only hosts static files and cannot run the serverless API route.
 
@@ -90,10 +92,11 @@ GitHub Pages is not recommended for the full AI version because it only hosts st
 
 | Variable | Required | Default | Notes |
 | --- | --- | --- | --- |
-| `AI_API_KEY` | Yes for AI generation | Empty | Provider API key. Kept on the server only. |
+| `AI_API_KEY` | No for demo mode, yes for real AI | Empty | Provider API key. Kept on the server only. |
 | `AI_API_BASE_URL` | No | `https://api.openai.com/v1` | Any OpenAI-compatible `/chat/completions` base URL. |
 | `AI_MODEL` | No | `gpt-4o-mini` | Model sent to the provider. |
 | `AI_TIMEOUT_MS` | No | `45000` | Server-side timeout for model requests. |
+| `AI_DISABLE_DEMO_FALLBACK` | No | `false` | Set to `true` if you want missing API keys to fail instead of returning demo itineraries. |
 | `PORT` | No | `3000` | Local server port. |
 | `AI_HTTP_REFERER` | No | `http://localhost:3000` | Optional OpenRouter metadata. |
 | `AI_APP_TITLE` | No | `Trip Planner` | Optional OpenRouter metadata. |
@@ -144,6 +147,7 @@ The assignment emphasizes unreliable AI output, so this app treats model respons
 - Slow responses show a waiting state and are aborted after the timeout.
 - The client aborts older requests and tracks request IDs so stale responses cannot overwrite newer plans.
 - If the model returns valid stops without day grouping, the backend repairs them into a single-day itinerary and returns a warning.
+- If no API key is configured, the backend returns a demo itinerary with a warning so the deployed app remains usable.
 
 ## Frontend Details
 
@@ -156,7 +160,8 @@ The assignment emphasizes unreliable AI output, so this app treats model respons
 
 ## Known Limitations
 
-- The app targets OpenAI-compatible chat completion APIs. Native Gemini or Ollama endpoints would need a small adapter.
+- Real AI generation targets OpenAI-compatible chat completion APIs. Native Gemini or Ollama endpoints would need a small adapter.
+- Demo fallback mode is useful for review and deployment smoke tests, but it is not a replacement for real model output.
 - Reordering is scoped to stops within a day, not moving stops between days.
 - Saved itineraries are local to the current browser and are not synced across devices.
 - The image panels use remote Unsplash URLs; a production app could bundle curated local assets.

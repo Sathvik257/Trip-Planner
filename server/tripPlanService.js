@@ -17,6 +17,10 @@ export async function createTripPlanResponse(input) {
     throw error;
   }
 
+  if (!process.env.AI_API_KEY && process.env.AI_DISABLE_DEMO_FALLBACK !== "true") {
+    return createDemoTripPlan(cleanInput);
+  }
+
   return generateTripPlan(cleanInput);
 }
 
@@ -214,4 +218,187 @@ function readProviderError(responseText) {
   } catch (error) {
     return responseText.slice(0, 220);
   }
+}
+
+function createDemoTripPlan(input) {
+  const dayCount = detectDayCount(input);
+  const destination = detectDestination(input);
+  const interests = detectInterests(input);
+  const days = Array.from({ length: dayCount }, (_value, dayIndex) =>
+    createDemoDay(destination, interests, dayIndex)
+  );
+
+  return {
+    tripPlan: {
+      id: `demo-${Date.now().toString(36)}`,
+      title: `${destination} Smart Itinerary`,
+      destination,
+      summary: `A demo ${dayCount}-day itinerary shaped from your request. Add an API key for fully AI-generated plans.`,
+      travelStyle: detectTravelStyle(input),
+      createdAt: new Date().toISOString(),
+      days,
+    },
+    warnings: [
+      "Demo itinerary generated because AI_API_KEY is not configured. Add an API key for real AI-generated plans.",
+    ],
+  };
+}
+
+function detectDayCount(input) {
+  const match = input.match(/\b([1-9]|10)\s*[- ]?\s*day/i);
+  const parsed = match ? Number(match[1]) : 3;
+  return Math.min(Math.max(parsed || 3, 1), 7);
+}
+
+function detectDestination(input) {
+  const destinationMatch = input.match(/\b(?:to|in|for)\s+([a-z][a-z\s.'-]{1,42}?)(?:,|\s+for\s+|\s+with\s+|\s+in\s+|\s+during\s+|\s+on\s+|$)/i);
+  const destination = destinationMatch?.[1]?.trim();
+
+  if (!destination) {
+    return "Your Destination";
+  }
+
+  return toTitleCase(destination.replace(/\b\d+\s*[- ]?\s*day\b/gi, "").trim()) || "Your Destination";
+}
+
+function detectTravelStyle(input) {
+  const lowerInput = input.toLowerCase();
+
+  if (lowerInput.includes("luxury")) {
+    return "Luxury";
+  }
+
+  if (lowerInput.includes("budget")) {
+    return "Budget friendly";
+  }
+
+  if (lowerInput.includes("family") || lowerInput.includes("parents") || lowerInput.includes("kids")) {
+    return "Family friendly";
+  }
+
+  if (lowerInput.includes("relaxed") || lowerInput.includes("slow") || lowerInput.includes("easy")) {
+    return "Relaxed pace";
+  }
+
+  if (lowerInput.includes("food") || lowerInput.includes("street food") || lowerInput.includes("restaurants")) {
+    return "Food and culture";
+  }
+
+  return "Balanced";
+}
+
+function detectInterests(input) {
+  const lowerInput = input.toLowerCase();
+  const interests = [];
+
+  const interestMap = [
+    ["food", "Food"],
+    ["street food", "Food"],
+    ["restaurant", "Food"],
+    ["temple", "Temple"],
+    ["museum", "Museum"],
+    ["garden", "Garden"],
+    ["shopping", "Shopping"],
+    ["market", "Market"],
+    ["beach", "Beach"],
+    ["nature", "Nature"],
+    ["view", "Viewpoint"],
+    ["skyline", "Viewpoint"],
+    ["anime", "Shopping"],
+    ["heritage", "Culture"],
+    ["culture", "Culture"],
+  ];
+
+  for (const [needle, label] of interestMap) {
+    if (lowerInput.includes(needle) && !interests.includes(label)) {
+      interests.push(label);
+    }
+  }
+
+  return interests.length > 0 ? interests : ["Culture", "Food", "Viewpoint"];
+}
+
+function createDemoDay(destination, interests, dayIndex) {
+  const dayNumber = dayIndex + 1;
+  const theme = buildDayTheme(interests, dayIndex);
+
+  return {
+    id: `day-${dayNumber}`,
+    dateLabel: `Day ${dayNumber}`,
+    title: `${theme} In ${destination}`,
+    theme: `A balanced ${theme.toLowerCase()} day with realistic pacing and simple navigation.`,
+    notes: "This is a demo plan. Add an API key to generate destination-specific live AI details.",
+    stops: createDemoStops(destination, interests, dayIndex),
+  };
+}
+
+function buildDayTheme(interests, dayIndex) {
+  const first = interests[dayIndex % interests.length];
+  const second = interests[(dayIndex + 1) % interests.length];
+  return first === second ? first : `${first} And ${second}`;
+}
+
+function createDemoStops(destination, interests, dayIndex) {
+  const focus = interests[dayIndex % interests.length];
+  const secondary = interests[(dayIndex + 1) % interests.length];
+  const dayNumber = dayIndex + 1;
+
+  return [
+    {
+      id: `day-${dayNumber}-stop-1`,
+      time: "9:30 AM",
+      title: `${destination} ${focus} District`,
+      location: "Central area",
+      duration: "2 hr",
+      category: focus,
+      description: `Start with an easy-paced ${focus.toLowerCase()} stop that anchors the day and keeps travel time manageable.`,
+      tips: ["Start after peak commute.", "Keep tickets and map links ready."],
+      cost: "$$",
+      bookingNeeded: focus === "Museum" || focus === "Temple",
+    },
+    {
+      id: `day-${dayNumber}-stop-2`,
+      time: "12:30 PM",
+      title: "Local Lunch Stop",
+      location: "Nearby neighborhood",
+      duration: "75 min",
+      category: "Food",
+      description: "Build in a relaxed meal break close to the morning activity so the itinerary does not feel rushed.",
+      tips: ["Save one backup restaurant.", "Check opening hours before leaving."],
+      cost: "$$",
+      bookingNeeded: false,
+    },
+    {
+      id: `day-${dayNumber}-stop-3`,
+      time: "3:00 PM",
+      title: `${secondary} Walk`,
+      location: "Walkable route",
+      duration: "90 min",
+      category: secondary,
+      description: `Use the afternoon for ${secondary.toLowerCase()} time with room to pause, browse, and adjust on the go.`,
+      tips: ["Keep this stop flexible.", "Move it earlier if weather changes."],
+      cost: secondary === "Shopping" ? "$$" : "$",
+      bookingNeeded: false,
+    },
+    {
+      id: `day-${dayNumber}-stop-4`,
+      time: "6:30 PM",
+      title: "Sunset And Dinner Area",
+      location: "Scenic evening zone",
+      duration: "2 hr",
+      category: "Dinner",
+      description: "End near a lively but low-stress evening area with dinner options and an easy route back.",
+      tips: ["Reserve dinner for weekends.", "Check return transport before late evening."],
+      cost: "$$",
+      bookingNeeded: false,
+    },
+  ];
+}
+
+function toTitleCase(value) {
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1).toLowerCase()}`)
+    .join(" ");
 }
