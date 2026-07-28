@@ -2,10 +2,12 @@
 
 A polished React app that turns a free-form travel request into a structured, interactive itinerary. The AI returns JSON, the backend validates and normalizes it, and the frontend renders the plan as editable days and stops instead of a chatbot transcript.
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Sathvik257/Trip-Planner&env=AI_API_KEY,AI_API_BASE_URL,AI_MODEL,AI_TIMEOUT_MS&envDescription=AI%20provider%20settings%20for%20Trip%20Planner)
+
 ## Highlights
 
 - Free-form trip prompt for destinations, dates, pace, budget, interests, and constraints.
-- Real LLM integration through a Node/Express backend route, so API keys are not exposed in browser code.
+- Real LLM integration through a backend route/serverless function, so API keys are not exposed in browser code.
 - Structured itinerary rendering with day tabs, stop cards, expandable details, route preview, and a trip brief modal.
 - Interactive editing: remove stops, move stops up/down, and drag-and-drop reorder stops within a day.
 - Resilient AI handling for malformed JSON, wrong shapes, empty responses, slow requests, provider failures, and stale responses.
@@ -55,6 +57,35 @@ http://127.0.0.1:3000
 
 The sample itinerary works without an API key, so the UI can be reviewed immediately. AI generation requires `AI_API_KEY`.
 
+## Deploy Online
+
+This project is ready to host on Vercel without running the local Express server.
+
+1. Push or import this repository into Vercel.
+2. Use the default build settings:
+
+   ```text
+   Framework Preset: Vite
+   Build Command: npm run build
+   Output Directory: dist
+   ```
+
+3. Add these environment variables in the Vercel project settings:
+
+   ```text
+   AI_API_KEY=your_api_key_here
+   AI_API_BASE_URL=https://api.openai.com/v1
+   AI_MODEL=gpt-4o-mini
+   AI_TIMEOUT_MS=45000
+   AI_APP_TITLE=Trip Planner
+   ```
+
+4. Deploy.
+
+The hosted app uses `api/generate-trip-plan.js` as the serverless AI endpoint. The browser calls `/api/generate-trip-plan`, and the API key stays in the hosting environment, not in the frontend bundle.
+
+GitHub Pages is not recommended for the full AI version because it only hosts static files and cannot run the serverless API route.
+
 ## Environment Variables
 
 | Variable | Required | Default | Notes |
@@ -97,7 +128,7 @@ Runs tests and then builds the app.
 
 1. The user writes a trip request in natural language.
 2. The frontend posts that text to `/api/generate-trip-plan`.
-3. The backend calls the configured LLM provider with a strict JSON itinerary prompt.
+3. The backend calls the configured LLM provider with a strict JSON itinerary prompt. Locally this runs through `server/index.js`; online this runs through `api/generate-trip-plan.js`.
 4. The parser extracts JSON even if the model wraps it in code fences or extra text.
 5. The normalizer validates the shape, cleans text, creates missing IDs, accepts common alternate keys, and repairs ungrouped stops into a single day when possible.
 6. The React UI renders validated data as interactive itinerary components.
