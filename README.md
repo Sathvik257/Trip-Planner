@@ -11,6 +11,7 @@ A polished React app that turns a free-form travel request into a structured, in
 - Demo fallback mode when `AI_API_KEY` is missing, so the hosted app still generates structured itineraries for reviewers.
 - Structured itinerary rendering with day tabs, stop cards, day pulse metrics, expandable details, route preview, and a trip brief modal.
 - Interactive editing: add custom stops, remove stops, move stops up/down, and drag-and-drop reorder stops within a day.
+- Reference-inspired planner UI with live brief signals, trending route prompt cards, floating planner callouts, and an animated plan score.
 - Resilient AI handling for malformed JSON, wrong shapes, empty responses, slow requests, provider failures, and stale responses.
 - Responsive modern UI with animated route visuals, hover transitions, loading shimmer, save toasts, dark mode, and reduced-motion support.
 - Local saved itineraries using browser storage.
@@ -153,9 +154,11 @@ The assignment emphasizes unreliable AI output, so this app treats model respons
 
 - Desktop layout uses a sticky planning panel beside the itinerary workspace.
 - Mobile layout stacks cleanly with horizontal day navigation.
+- The planner input shows live signal meters for brief depth, trip shape, interests, and budget clues.
+- Trending route cards can fill the prompt with polished destination examples.
 - Stop cards support expand/collapse, manual additions, drag reorder, button reorder, and removal.
 - The trip brief modal summarizes the destination, style, days, and stops.
-- Visual polish includes route-board illustrations, animated route nodes, day pulse meters, hover lift, button shine, loading shimmer, save toasts, and dark mode.
+- Visual polish includes route-board illustrations, floating planner callouts, animated route nodes, day pulse meters, hover lift, button shine, loading shimmer, save toasts, and dark mode.
 - Accessibility details include semantic buttons, labels, focus states, keyboard-friendly modal closing, and `prefers-reduced-motion` support.
 
 ## Known Limitations

@@ -48,6 +48,28 @@ const PROMPT_EXAMPLES = [
     text: "3 days in Goa, relaxed beaches, seafood, one heritage walk, scooter-friendly, budget conscious, no packed schedule.",
   },
 ];
+const TRENDING_ROUTES = [
+  {
+    label: "Barcelona",
+    cue: "Food, Gaudi, beaches",
+    text: "4 days in Barcelona, architecture, tapas, beach sunset, medium budget, walkable days, first-time visitor.",
+  },
+  {
+    label: "Japan",
+    cue: "Tokyo + Kyoto flow",
+    text: "8 days in Japan, Tokyo and Kyoto, food, temples, anime shops, easy trains, balanced pace, mid-range budget.",
+  },
+  {
+    label: "Rome",
+    cue: "Classics, cafes, ruins",
+    text: "5 days in Rome, history, cafes, Vatican, relaxed mornings, good photo spots, medium budget.",
+  },
+  {
+    label: "Phuket",
+    cue: "Island reset",
+    text: "4 days in Phuket, beaches, boat day, night markets, seafood, relaxed pace, budget friendly.",
+  },
+];
 const CATEGORY_ICONS = {
   food: Utensils,
   dinner: Utensils,
@@ -145,6 +167,7 @@ export default function App() {
     };
   }, [tripPlan]);
   const selectedStop = focusedDay?.stops.find((stop) => expandedStopIds.has(stop.id)) || focusedDay?.stops[0];
+  const inputSignals = useMemo(() => buildInputSignals(input), [input]);
 
   async function generateTripPlan() {
     const tripRequest = input.trim();
@@ -499,6 +522,8 @@ export default function App() {
             <span className="count">{input.trim().length}/7000</span>
           </div>
 
+          <TravelSignalPanel signals={inputSignals} />
+
           <textarea
             value={input}
             onChange={(event) => setInput(event.target.value)}
@@ -508,6 +533,7 @@ export default function App() {
           />
 
           <PromptExamples examples={PROMPT_EXAMPLES} onUse={applyPromptExample} />
+          <TrendingRoutes routes={TRENDING_ROUTES} onUse={applyPromptExample} />
 
           <div className="button-row">
             <button className="primary-button" type="button" onClick={generateTripPlan} disabled={phase === "loading"}>
@@ -658,7 +684,53 @@ function PromptExamples({ examples, onUse }) {
   );
 }
 
+function TravelSignalPanel({ signals }) {
+  return (
+    <div className="signal-panel" aria-label="Trip brief signals">
+      {signals.map((signal, index) => (
+        <article className="signal-card" key={signal.label} style={{ "--signal-delay": `${index * 70}ms` }}>
+          <div className="signal-top">
+            <signal.Icon size={16} />
+            <span>{signal.label}</span>
+          </div>
+          <strong>{signal.detail}</strong>
+          <div className="signal-meter" aria-hidden="true">
+            <span style={{ width: `${signal.value}%` }} />
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function TrendingRoutes({ routes, onUse }) {
+  return (
+    <section className="trending-routes" aria-label="Trending trip ideas">
+      <div className="trending-heading">
+        <span className="eyebrow">Trending ideas</span>
+        <span className="live-dot">Live</span>
+      </div>
+      <div className="trend-strip">
+        {routes.map((route, index) => (
+          <button
+            key={route.label}
+            type="button"
+            className="trend-card"
+            style={{ "--trend-delay": `${index * 80}ms` }}
+            onClick={() => onUse(route.text)}
+          >
+            <span>{route.label}</span>
+            <strong>{route.cue}</strong>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function TripHero({ tripPlan, focusedDay, selectedStop, totals, onSave, onOpenBrief }) {
+  const planScore = buildPlanScore(totals);
+
   return (
     <div className="trip-hero">
       <div className="trip-header">
@@ -707,6 +779,17 @@ function TripHero({ tripPlan, focusedDay, selectedStop, totals, onSave, onOpenBr
             <CheckCircle2 size={15} />
             {totals.bookings} bookings
           </span>
+        </div>
+        <div className="trip-score-row" aria-label="AI planning quality">
+          <div className="score-ring" style={{ "--score": `${planScore}%` }}>
+            <strong>{planScore}</strong>
+            <span>plan score</span>
+          </div>
+          <div className="score-copy">
+            <span>AI planner pass</span>
+            <strong>Structured, editable, and ready to tune.</strong>
+            <p>Validated JSON, movable stops, local saving, and a route preview for every day.</p>
+          </div>
         </div>
       </div>
       <div className="hero-side-stack">
@@ -1104,21 +1187,35 @@ function LoadingState() {
 function EmptyState({ onSample }) {
   return (
     <div className="empty-state">
-      <div className="empty-card">
-        <div className="empty-icon">
-          <Route size={34} />
+      <div className="empty-stage">
+        <div className="planner-float float-one" aria-hidden="true">
+          <Sparkles size={16} />
+          <span>AI parsing brief</span>
         </div>
-        <h2>Ready for a destination.</h2>
-        <p>Generate a trip plan or open the sample itinerary.</p>
-        <div className="empty-preview" aria-hidden="true">
-          <span>Day 1 - Arrival walk</span>
-          <span>Day 2 - Food + culture</span>
-          <span>Day 3 - Scenic reset</span>
+        <div className="planner-float float-two" aria-hidden="true">
+          <MapPin size={16} />
+          <span>Stops become cards</span>
         </div>
-        <button className="primary-button" type="button" onClick={onSample}>
-          <Play size={18} />
-          Explore sample
-        </button>
+        <div className="planner-float float-three" aria-hidden="true">
+          <CheckCircle2 size={16} />
+          <span>JSON validated</span>
+        </div>
+        <div className="empty-card">
+          <div className="empty-icon">
+            <Route size={34} />
+          </div>
+          <h2>Ready for a destination.</h2>
+          <p>Generate a trip plan or open the sample itinerary.</p>
+          <div className="empty-preview" aria-hidden="true">
+            <span>Day 1 - Arrival walk</span>
+            <span>Day 2 - Food + culture</span>
+            <span>Day 3 - Scenic reset</span>
+          </div>
+          <button className="primary-button" type="button" onClick={onSample}>
+            <Play size={18} />
+            Explore sample
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -1357,6 +1454,48 @@ function getPaceLabel(stopCount) {
   }
 
   return "full day";
+}
+
+function buildInputSignals(input) {
+  const text = input.trim().toLowerCase();
+  const lengthScore = Math.min(100, Math.max(12, Math.round(input.trim().length / 9)));
+  const hasDestination = /\b(in|to|for)\s+[a-z][a-z\s]{2,}/i.test(input);
+  const hasDays = /\b\d+\s*(day|days|week|weeks)\b/i.test(input);
+  const interests = ["food", "museum", "beach", "temple", "shopping", "nature", "family", "cafe", "walk"].filter(
+    (word) => text.includes(word)
+  );
+  const budgetMatch = text.match(/\b(budget|cheap|affordable|mid-range|medium|luxury|premium)\b/);
+
+  return [
+    {
+      label: "Brief depth",
+      detail: input.trim() ? `${lengthScore}% ready` : "start typing",
+      value: lengthScore,
+      Icon: FileText,
+    },
+    {
+      label: "Trip shape",
+      detail: hasDestination && hasDays ? "destination + days" : hasDestination ? "add days" : "add destination",
+      value: hasDestination && hasDays ? 92 : hasDestination || hasDays ? 55 : 18,
+      Icon: Compass,
+    },
+    {
+      label: "Interests",
+      detail: interests.length ? `${Math.min(interests.length, 4)} signals` : "add interests",
+      value: Math.min(100, Math.max(20, interests.length * 26)),
+      Icon: Sparkles,
+    },
+    {
+      label: "Budget clue",
+      detail: budgetMatch ? budgetMatch[0] : "optional",
+      value: budgetMatch ? 88 : 30,
+      Icon: Wallet,
+    },
+  ];
+}
+
+function buildPlanScore(totals) {
+  return Math.min(98, Math.max(78, 72 + totals.days * 3 + totals.stops + totals.bookings * 2));
 }
 
 async function readJson(response) {
