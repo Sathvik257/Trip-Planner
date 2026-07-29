@@ -9,10 +9,10 @@ A polished React app that turns a free-form travel request into a structured, in
 - Free-form trip prompt for destinations, dates, pace, budget, interests, and constraints.
 - Real LLM integration through a backend route/serverless function, so API keys are not exposed in browser code.
 - Demo fallback mode when `AI_API_KEY` is missing, so the hosted app still generates structured itineraries for reviewers.
-- Structured itinerary rendering with day tabs, stop cards, expandable details, route preview, and a trip brief modal.
-- Interactive editing: remove stops, move stops up/down, and drag-and-drop reorder stops within a day.
+- Structured itinerary rendering with day tabs, stop cards, day pulse metrics, expandable details, route preview, and a trip brief modal.
+- Interactive editing: add custom stops, remove stops, move stops up/down, and drag-and-drop reorder stops within a day.
 - Resilient AI handling for malformed JSON, wrong shapes, empty responses, slow requests, provider failures, and stale responses.
-- Responsive modern UI with scenic imagery, animated route states, hover transitions, loading shimmer, save toasts, dark mode, and reduced-motion support.
+- Responsive modern UI with animated route visuals, hover transitions, loading shimmer, save toasts, dark mode, and reduced-motion support.
 - Local saved itineraries using browser storage.
 
 ## Tech Stack
@@ -153,9 +153,9 @@ The assignment emphasizes unreliable AI output, so this app treats model respons
 
 - Desktop layout uses a sticky planning panel beside the itinerary workspace.
 - Mobile layout stacks cleanly with horizontal day navigation.
-- Stop cards support expand/collapse, drag reorder, button reorder, and removal.
+- Stop cards support expand/collapse, manual additions, drag reorder, button reorder, and removal.
 - The trip brief modal summarizes the destination, style, days, and stops.
-- Visual polish includes scenic image panels, animated route nodes, hover lift, button shine, loading shimmer, save toasts, and dark mode.
+- Visual polish includes route-board illustrations, animated route nodes, day pulse meters, hover lift, button shine, loading shimmer, save toasts, and dark mode.
 - Accessibility details include semantic buttons, labels, focus states, keyboard-friendly modal closing, and `prefers-reduced-motion` support.
 
 ## Known Limitations
@@ -164,7 +164,7 @@ The assignment emphasizes unreliable AI output, so this app treats model respons
 - Demo fallback mode is useful for review and deployment smoke tests, but it is not a replacement for real model output.
 - Reordering is scoped to stops within a day, not moving stops between days.
 - Saved itineraries are local to the current browser and are not synced across devices.
-- The image panels use remote Unsplash URLs; a production app could bundle curated local assets.
+- The visual route boards are decorative and do not include a real map or live distance calculations.
 - Streaming generation is not included.
 
 ## AI Usage Note

@@ -64,6 +64,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  overflow-x: hidden;
   background:
     linear-gradient(115deg, rgba(45, 111, 163, 0.12), transparent 38%),
     linear-gradient(135deg, rgba(23, 111, 117, 0.1), transparent 36%),
@@ -85,7 +86,9 @@ body::before {
 }
 
 button,
-textarea {
+textarea,
+input,
+select {
   font: inherit;
 }
 
@@ -304,12 +307,14 @@ h4 {
   min-height: 185px;
   overflow: hidden;
   border-radius: 8px;
+  background:
+    linear-gradient(145deg, rgba(45, 111, 163, 0.22), rgba(23, 111, 117, 0.2) 44%, rgba(189, 85, 60, 0.18)),
+    var(--panel-strong);
   isolation: isolate;
   box-shadow: 0 18px 42px rgba(23, 111, 117, 0.16);
 }
 
-.showcase-card img,
-.destination-poster img {
+.showcase-card img {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -320,8 +325,88 @@ h4 {
 }
 
 .showcase-card:hover img,
-.destination-poster:hover img {
+.showcase-card:hover .route-plane,
+.destination-poster:hover .destination-plane {
   transform: scale(1.1);
+}
+
+.route-art-grid {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px 100%),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.14) 0 1px, transparent 1px 100%);
+  background-size: 32px 32px;
+}
+
+.route-art-grid::before,
+.destination-line {
+  content: "";
+  position: absolute;
+  width: 62%;
+  height: 42%;
+  border-left: 4px solid rgba(255, 255, 255, 0.74);
+  border-bottom: 4px solid rgba(255, 255, 255, 0.74);
+  border-radius: 8px 0 0 8px;
+  transform: rotate(-7deg);
+  transform-origin: center;
+}
+
+.route-art-grid::before {
+  left: 18%;
+  top: 24%;
+  animation: routeTrace 2.8s ease-in-out infinite;
+}
+
+.route-pin,
+.destination-pin {
+  position: absolute;
+  display: block;
+  width: 15px;
+  height: 15px;
+  border: 3px solid #ffffff;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.18);
+  animation: mapBlink 1.8s ease-in-out infinite;
+}
+
+.route-pin.pin-one {
+  top: 25%;
+  left: 18%;
+}
+
+.route-pin.pin-two {
+  top: 42%;
+  left: 52%;
+  animation-delay: 160ms;
+}
+
+.route-pin.pin-three {
+  right: 18%;
+  bottom: 22%;
+  animation-delay: 320ms;
+}
+
+.route-plane,
+.destination-plane {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--primary);
+  box-shadow: 0 16px 36px rgba(13, 28, 32, 0.18);
+  transition: transform 700ms ease;
+}
+
+.route-plane {
+  top: 26px;
+  left: 32px;
+  width: 42px;
+  height: 42px;
+  animation: flyDrift 4.4s ease-in-out infinite;
 }
 
 .showcase-card::after {
@@ -523,6 +608,10 @@ textarea:focus {
 .prompt-examples button:focus-visible,
 .day-tabs button:focus-visible,
 .stop-main:focus-visible,
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible,
+.checkbox-field input:focus-visible,
 .modal button:focus-visible {
   outline: 3px solid rgba(23, 111, 117, 0.28);
   outline-offset: 2px;
@@ -778,8 +867,77 @@ textarea:focus {
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 8px;
+  background:
+    linear-gradient(140deg, rgba(23, 111, 117, 0.64), rgba(45, 111, 163, 0.42) 52%, rgba(189, 85, 60, 0.42)),
+    var(--primary);
   box-shadow: var(--shadow-strong);
   isolation: isolate;
+}
+
+.destination-visual {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 34px, rgba(255, 255, 255, 0.12) 35px 36px),
+    repeating-linear-gradient(0deg, transparent 0 34px, rgba(255, 255, 255, 0.1) 35px 36px);
+}
+
+.destination-visual::before,
+.destination-visual::after {
+  content: "";
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transform: rotate(22deg);
+}
+
+.destination-visual::before {
+  top: -46px;
+  right: -24px;
+}
+
+.destination-visual::after {
+  left: -54px;
+  bottom: -56px;
+}
+
+.destination-line {
+  left: 18%;
+  top: 28%;
+  z-index: 1;
+  animation: routeTrace 3s ease-in-out infinite;
+}
+
+.destination-pin {
+  z-index: 2;
+}
+
+.destination-pin.pin-one {
+  top: 26%;
+  left: 18%;
+}
+
+.destination-pin.pin-two {
+  top: 46%;
+  left: 52%;
+  animation-delay: 140ms;
+}
+
+.destination-pin.pin-three {
+  right: 18%;
+  bottom: 22%;
+  animation-delay: 280ms;
+}
+
+.destination-plane {
+  top: 28px;
+  right: 28px;
+  z-index: 2;
+  width: 54px;
+  height: 54px;
+  animation: flyDrift 4.8s ease-in-out infinite;
 }
 
 .poster-scrim {
@@ -1035,6 +1193,13 @@ textarea:focus {
   padding-left: 12px;
 }
 
+.day-heading-side {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+  min-width: min(330px, 100%);
+}
+
 .day-insights {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1055,6 +1220,79 @@ textarea:focus {
     var(--panel);
   color: var(--muted);
   font-weight: 720;
+}
+
+.day-pulse {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.pulse-card {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  min-height: 88px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.82), rgba(248, 250, 249, 0.72)),
+    var(--panel);
+  box-shadow: 0 10px 26px rgba(32, 36, 42, 0.06);
+  overflow: hidden;
+  animation: panelEnter 300ms ease both;
+}
+
+.pulse-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 12px 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), var(--accent), var(--sky));
+  opacity: 0.5;
+}
+
+.pulse-label {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.pulse-label svg {
+  grid-row: span 2;
+  color: var(--primary);
+}
+
+.pulse-label span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+.pulse-label strong {
+  min-width: 0;
+  font-size: 0.96rem;
+  overflow-wrap: anywhere;
+}
+
+.pulse-meter {
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--panel-strong);
+}
+
+.pulse-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  animation: meterFill 620ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .stop-list {
@@ -1251,6 +1489,48 @@ textarea:focus {
   animation: emptyFloat 4s ease-in-out infinite;
 }
 
+.empty-preview {
+  display: grid;
+  gap: 8px;
+  width: min(330px, 100%);
+  margin: 4px 0;
+}
+
+.empty-preview span {
+  position: relative;
+  display: block;
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 12px 7px 32px;
+  background: var(--panel-strong);
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 720;
+  text-align: left;
+  animation: previewSlide 620ms ease both;
+}
+
+.empty-preview span:nth-child(2) {
+  animation-delay: 80ms;
+}
+
+.empty-preview span:nth-child(3) {
+  animation-delay: 160ms;
+}
+
+.empty-preview span::before {
+  content: "";
+  position: absolute;
+  top: 13px;
+  left: 12px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
 .empty-mini {
   min-height: 220px;
   border: 1px dashed var(--line);
@@ -1291,6 +1571,93 @@ textarea:focus {
 
 .loading-route span:nth-child(3) {
   animation-delay: 240ms;
+}
+
+.loading-board {
+  display: grid;
+  grid-template-columns: 110px minmax(160px, 250px);
+  gap: 14px;
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.74), rgba(248, 250, 249, 0.62)),
+    var(--panel);
+  box-shadow: 0 14px 36px rgba(32, 36, 42, 0.08);
+}
+
+.loading-map {
+  position: relative;
+  min-height: 98px;
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(23, 111, 117, 0.16) 0 1px, transparent 1px 100%),
+    linear-gradient(0deg, rgba(189, 85, 60, 0.14) 0 1px, transparent 1px 100%),
+    var(--panel-strong);
+  background-size: 24px 24px;
+  overflow: hidden;
+}
+
+.loading-map::before {
+  content: "";
+  position: absolute;
+  inset: 18px 28px;
+  border-left: 3px solid var(--primary);
+  border-bottom: 3px solid var(--accent);
+  border-radius: 8px 0 0 8px;
+  animation: routeTrace 1.5s ease-in-out infinite;
+}
+
+.loading-map span {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 0 0 5px rgba(23, 111, 117, 0.14);
+  animation: mapBlink 1.2s ease-in-out infinite;
+}
+
+.loading-map span:nth-child(1) {
+  top: 18px;
+  left: 26px;
+}
+
+.loading-map span:nth-child(2) {
+  top: 48px;
+  left: 62px;
+  animation-delay: 140ms;
+}
+
+.loading-map span:nth-child(3) {
+  right: 22px;
+  bottom: 18px;
+  animation-delay: 280ms;
+}
+
+.loading-lines {
+  display: grid;
+  align-content: center;
+  gap: 10px;
+}
+
+.loading-lines span {
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--panel-strong), var(--primary-soft), var(--panel-strong));
+  background-size: 220% 100%;
+  animation: shimmer 1.15s ease-in-out infinite;
+}
+
+.loading-lines span:nth-child(2) {
+  width: 78%;
+  animation-delay: 100ms;
+}
+
+.loading-lines span:nth-child(3) {
+  width: 58%;
+  animation-delay: 200ms;
 }
 
 .modal-backdrop {
@@ -1382,6 +1749,76 @@ textarea:focus {
   justify-content: flex-end;
 }
 
+.add-stop-modal {
+  width: min(720px, 100%);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.field,
+.checkbox-field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.field-wide {
+  grid-column: 1 / -1;
+}
+
+.field span,
+.checkbox-field {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 750;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  outline: none;
+  background: var(--panel-strong);
+  color: var(--text);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background 150ms ease;
+}
+
+.field textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--primary);
+  background: var(--panel);
+  box-shadow: 0 0 0 3px rgba(23, 111, 117, 0.14);
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  min-height: 38px;
+}
+
+.checkbox-field input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+
 .spin {
   animation: spin 1s linear infinite;
 }
@@ -1429,6 +1866,39 @@ textarea:focus {
   from {
     opacity: 0;
     transform: translateY(-4px);
+  }
+}
+
+@keyframes meterFill {
+  from {
+    width: 0;
+  }
+}
+
+@keyframes previewSlide {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+}
+
+@keyframes routeTrace {
+  50% {
+    transform: translate(6px, -2px);
+    opacity: 0.62;
+  }
+}
+
+@keyframes flyDrift {
+  50% {
+    transform: translate(9px, -5px) rotate(5deg);
+  }
+}
+
+@keyframes mapBlink {
+  50% {
+    transform: scale(1.22);
+    box-shadow: 0 0 0 8px rgba(23, 111, 117, 0.1);
   }
 }
 
@@ -1499,11 +1969,18 @@ textarea:focus {
 
 @media (max-width: 980px) {
   .layout-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .composer-panel {
     position: static;
+  }
+
+  .composer-panel,
+  .workspace-panel,
+  .topbar,
+  .topnav {
+    min-width: 0;
   }
 
   .workspace-panel {
@@ -1512,6 +1989,10 @@ textarea:focus {
 
   .trip-hero {
     grid-template-columns: 1fr;
+  }
+
+  .day-pulse {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .route-map {
@@ -1549,6 +2030,7 @@ textarea:focus {
   }
 
   .brand-lockup {
+    width: 100%;
     min-width: 0;
   }
 
@@ -1557,7 +2039,13 @@ textarea:focus {
   }
 
   .topbar-actions {
-    margin-left: auto;
+    order: 2;
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .topbar-actions .compact-cta {
+    flex: 1;
   }
 
   .brand-mark {
@@ -1574,7 +2062,19 @@ textarea:focus {
   }
 
   .topbar p {
-    font-size: 0.9rem;
+    display: none;
+  }
+
+  .topnav {
+    order: 3;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    overflow-x: hidden;
+  }
+
+  .topnav button {
+    min-width: 0;
+    padding: 0 8px;
   }
 
   .composer-panel,
@@ -1597,6 +2097,10 @@ textarea:focus {
     width: 100%;
   }
 
+  .day-heading-side {
+    justify-items: stretch;
+  }
+
   .trip-header {
     grid-template-columns: 1fr;
   }
@@ -1617,6 +2121,12 @@ textarea:focus {
     min-height: 165px;
   }
 
+  .floating-route-note {
+    right: 10px;
+    max-width: calc(100% - 20px);
+    font-size: 0.8rem;
+  }
+
   .destination-poster {
     min-height: 190px;
   }
@@ -1626,6 +2136,15 @@ textarea:focus {
   }
 
   .day-insights {
+    grid-template-columns: 1fr;
+  }
+
+  .day-pulse {
+    grid-template-columns: 1fr;
+  }
+
+  .loading-board,
+  .form-grid {
     grid-template-columns: 1fr;
   }
 

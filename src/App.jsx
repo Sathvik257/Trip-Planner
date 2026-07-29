@@ -18,6 +18,7 @@ import {
   Moon,
   Navigation,
   Plane,
+  Plus,
   Play,
   RefreshCcw,
   Route,
@@ -61,6 +62,24 @@ const CATEGORY_ICONS = {
   transit: Route,
   logistics: Luggage,
 };
+const STOP_CATEGORY_OPTIONS = ["Culture", "Food", "Nature", "Walk", "Transit", "Logistics", "Shopping", "Custom"];
+
+function createStopDraft() {
+  return {
+    time: "Flexible",
+    title: "",
+    location: "",
+    duration: "60 min",
+    category: "Custom",
+    description: "",
+    cost: "",
+    bookingNeeded: false,
+  };
+}
+
+function cleanDraftField(value) {
+  return String(value || "").trim();
+}
 
 export default function App() {
   const [input, setInput] = useState("");
@@ -76,6 +95,8 @@ export default function App() {
   const [saveStatus, setSaveStatus] = useState("");
   const [draggingStopId, setDraggingStopId] = useState("");
   const [briefOpen, setBriefOpen] = useState(false);
+  const [stopModalDayId, setStopModalDayId] = useState("");
+  const [stopDraft, setStopDraft] = useState(() => createStopDraft());
   const requestRef = useRef({ id: 0, controller: null });
 
   useEffect(() => {
@@ -96,6 +117,7 @@ export default function App() {
     function handleEscape(event) {
       if (event.key === "Escape") {
         setBriefOpen(false);
+        setStopModalDayId("");
       }
     }
 
@@ -207,6 +229,7 @@ export default function App() {
     setFocusedDayId(plan.days[0]?.id || "");
     setExpandedStopIds(new Set(plan.days[0]?.stops[0] ? [plan.days[0].stops[0].id] : []));
     setError(null);
+    setStopModalDayId("");
   }
 
   function loadSample() {
@@ -354,6 +377,69 @@ export default function App() {
     });
   }
 
+  function openStopModal(dayId) {
+    setStopDraft(createStopDraft());
+    setStopModalDayId(dayId);
+  }
+
+  function updateStopDraft(field, value) {
+    setStopDraft((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }
+
+  function addStopToDay(event) {
+    event.preventDefault();
+
+    if (!tripPlan || !stopModalDayId) {
+      return;
+    }
+
+    const title = cleanDraftField(stopDraft.title);
+    if (!title) {
+      setSaveStatus("Add a stop title");
+      return;
+    }
+
+    const newStop = {
+      id: `manual-${stopModalDayId}-${Date.now()}`,
+      time: cleanDraftField(stopDraft.time) || "Flexible",
+      title,
+      location: cleanDraftField(stopDraft.location) || "Custom location",
+      duration: cleanDraftField(stopDraft.duration) || "60 min",
+      category: cleanDraftField(stopDraft.category) || "Custom",
+      description:
+        cleanDraftField(stopDraft.description) ||
+        "Custom stop added while refining this itinerary.",
+      tips: [],
+      cost: cleanDraftField(stopDraft.cost) || "Flexible",
+      bookingNeeded: Boolean(stopDraft.bookingNeeded),
+    };
+
+    setTripPlan((current) => {
+      if (!current) {
+        return current;
+      }
+
+      return {
+        ...current,
+        days: current.days.map((day) =>
+          day.id === stopModalDayId ? { ...day, stops: [...day.stops, newStop] } : day
+        ),
+      };
+    });
+
+    setExpandedStopIds((current) => {
+      const next = new Set(current);
+      next.add(newStop.id);
+      return next;
+    });
+    setStopDraft(createStopDraft());
+    setStopModalDayId("");
+    setSaveStatus("Stop added");
+  }
+
   return (
     <main className={`app-shell ${tripPlan ? "has-plan" : ""}`}>
       {saveStatus && (
@@ -486,6 +572,7 @@ export default function App() {
                 onToggleStop={toggleStop}
                 onRemoveStop={removeStop}
                 onMoveStop={moveStop}
+                onAddStop={() => openStopModal(focusedDay.id)}
                 onDragStart={setDraggingStopId}
                 onDragEnd={() => setDraggingStopId("")}
                 onDropStop={(targetStopId) => {
@@ -501,6 +588,14 @@ export default function App() {
       {briefOpen && tripPlan && (
         <TripBriefModal tripPlan={tripPlan} totals={totals} onClose={() => setBriefOpen(false)} />
       )}
+      {stopModalDayId && (
+        <AddStopModal
+          draft={stopDraft}
+          onChange={updateStopDraft}
+          onClose={() => setStopModalDayId("")}
+          onSubmit={addStopToDay}
+        />
+      )}
     </main>
   );
 }
@@ -514,12 +609,15 @@ function ComposerShowcase() {
         <p>Balanced days, clear timings, and edit-ready stops from a single travel brief.</p>
       </div>
 
-      <div className="showcase-card" aria-hidden="true">
-        <img
-          src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=900&q=80"
-          alt=""
-          loading="lazy"
-        />
+      <div className="showcase-card route-art" aria-hidden="true">
+        <div className="route-art-grid">
+          <span className="route-pin pin-one" />
+          <span className="route-pin pin-two" />
+          <span className="route-pin pin-three" />
+          <span className="route-plane">
+            <Plane size={20} />
+          </span>
+        </div>
         <div className="showcase-overlay">
           <span>Smart route</span>
           <strong>Kyoto</strong>
@@ -622,11 +720,15 @@ function TripHero({ tripPlan, focusedDay, selectedStop, totals, onSave, onOpenBr
 function DestinationPoster({ tripPlan, selectedStop }) {
   return (
     <aside className="destination-poster" aria-label="Destination visual summary">
-      <img
-        src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=900&q=80"
-        alt=""
-        loading="lazy"
-      />
+      <div className="destination-visual" aria-hidden="true">
+        <span className="destination-line" />
+        <span className="destination-pin pin-one" />
+        <span className="destination-pin pin-two" />
+        <span className="destination-pin pin-three" />
+        <span className="destination-plane">
+          <Plane size={24} />
+        </span>
+      </div>
       <div className="poster-scrim" />
       <div className="poster-content">
         <span>{tripPlan.destination}</span>
@@ -678,11 +780,13 @@ function ItineraryView({
   onToggleStop,
   onRemoveStop,
   onMoveStop,
+  onAddStop,
   onDragStart,
   onDragEnd,
   onDropStop,
 }) {
   const dayStats = summarizeDay(focusedDay);
+  const pulseStats = buildDayPulse(focusedDay);
 
   return (
     <div className="itinerary-view">
@@ -708,7 +812,13 @@ function ItineraryView({
             <h3>{focusedDay.title}</h3>
             {focusedDay.theme && <p>{focusedDay.theme}</p>}
           </div>
-          {focusedDay.notes && <p className="day-note">{focusedDay.notes}</p>}
+          <div className="day-heading-side">
+            {focusedDay.notes && <p className="day-note">{focusedDay.notes}</p>}
+            <button className="secondary-button small" type="button" onClick={onAddStop}>
+              <Plus size={16} />
+              Add stop
+            </button>
+          </div>
         </div>
 
         <div className="day-insights" aria-label={`${focusedDay.dateLabel} summary`}>
@@ -726,10 +836,29 @@ function ItineraryView({
           </span>
         </div>
 
+        <div className="day-pulse" aria-label={`${focusedDay.dateLabel} route quality`}>
+          {pulseStats.map((metric) => (
+            <article key={metric.label} className="pulse-card">
+              <div className="pulse-label">
+                <metric.Icon size={17} />
+                <span>{metric.label}</span>
+                <strong>{metric.detail}</strong>
+              </div>
+              <div className="pulse-meter" aria-hidden="true">
+                <span style={{ width: `${metric.value}%` }} />
+              </div>
+            </article>
+          ))}
+        </div>
+
         {focusedDay.stops.length === 0 ? (
           <div className="empty-mini">
             <Route size={30} />
             <h3>No stops left for this day</h3>
+            <button className="secondary-button small" type="button" onClick={onAddStop}>
+              <Plus size={16} />
+              Add a stop
+            </button>
           </div>
         ) : (
           <div className="stop-list">
@@ -956,6 +1085,18 @@ function LoadingState() {
         <span />
         <span />
       </div>
+      <div className="loading-board" aria-hidden="true">
+        <div className="loading-map">
+          <span />
+          <span />
+          <span />
+        </div>
+        <div className="loading-lines">
+          <span />
+          <span />
+          <span />
+        </div>
+      </div>
     </div>
   );
 }
@@ -969,11 +1110,122 @@ function EmptyState({ onSample }) {
         </div>
         <h2>Ready for a destination.</h2>
         <p>Generate a trip plan or open the sample itinerary.</p>
+        <div className="empty-preview" aria-hidden="true">
+          <span>Day 1 - Arrival walk</span>
+          <span>Day 2 - Food + culture</span>
+          <span>Day 3 - Scenic reset</span>
+        </div>
         <button className="primary-button" type="button" onClick={onSample}>
           <Play size={18} />
           Explore sample
         </button>
       </div>
+    </div>
+  );
+}
+
+function AddStopModal({ draft, onChange, onClose, onSubmit }) {
+  return (
+    <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
+      <form
+        className="modal add-stop-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-stop-title"
+        onMouseDown={(event) => event.stopPropagation()}
+        onSubmit={onSubmit}
+      >
+        <div className="modal-header">
+          <div>
+            <span className="eyebrow">Refine itinerary</span>
+            <h2 id="add-stop-title">Add a custom stop</h2>
+          </div>
+          <button className="icon-button" type="button" title="Close" aria-label="Close" onClick={onClose}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="form-grid">
+          <label className="field field-wide">
+            <span>Stop title</span>
+            <input
+              value={draft.title}
+              onChange={(event) => onChange("title", event.target.value)}
+              placeholder="Sunset viewpoint"
+              required
+            />
+          </label>
+          <label className="field">
+            <span>Time</span>
+            <input
+              value={draft.time}
+              onChange={(event) => onChange("time", event.target.value)}
+              placeholder="4:30 PM"
+            />
+          </label>
+          <label className="field">
+            <span>Duration</span>
+            <input
+              value={draft.duration}
+              onChange={(event) => onChange("duration", event.target.value)}
+              placeholder="60 min"
+            />
+          </label>
+          <label className="field">
+            <span>Category</span>
+            <select value={draft.category} onChange={(event) => onChange("category", event.target.value)}>
+              {STOP_CATEGORY_OPTIONS.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            <span>Cost</span>
+            <input
+              value={draft.cost}
+              onChange={(event) => onChange("cost", event.target.value)}
+              placeholder="Free / Rs 500 / $20"
+            />
+          </label>
+          <label className="field field-wide">
+            <span>Location</span>
+            <input
+              value={draft.location}
+              onChange={(event) => onChange("location", event.target.value)}
+              placeholder="Neighborhood, landmark, or address"
+            />
+          </label>
+          <label className="field field-wide">
+            <span>Description</span>
+            <textarea
+              value={draft.description}
+              onChange={(event) => onChange("description", event.target.value)}
+              placeholder="Why this stop belongs in the route"
+              rows={4}
+            />
+          </label>
+          <label className="checkbox-field field-wide">
+            <input
+              type="checkbox"
+              checked={draft.bookingNeeded}
+              onChange={(event) => onChange("bookingNeeded", event.target.checked)}
+            />
+            Needs booking
+          </label>
+        </div>
+
+        <div className="modal-actions">
+          <button className="secondary-button" type="button" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="primary-button" type="submit">
+            <Plus size={18} />
+            Add stop
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
@@ -1051,6 +1303,60 @@ function summarizeDay(day) {
     bookings,
     cost: paidStops === 0 ? "Mostly free" : `${paidStops} paid stops`,
   };
+}
+
+function buildDayPulse(day) {
+  const stops = day.stops || [];
+  const categories = new Set(stops.map((stop) => String(stop.category || "other").toLowerCase()));
+  const foodStops = stops.filter((stop) => /food|lunch|dinner|cafe|market/i.test(`${stop.category} ${stop.title}`));
+  const paidStops = stops.filter((stop) => {
+    const cost = String(stop.cost || "").toLowerCase();
+    return cost && cost !== "free";
+  });
+  const bookingStops = stops.filter((stop) => stop.bookingNeeded);
+  const paceValue = Math.min(100, Math.max(24, stops.length * 18));
+  const varietyValue = Math.min(100, Math.max(28, categories.size * 18));
+  const foodValue = Math.min(100, Math.max(24, foodStops.length * 34));
+  const spendValue = Math.min(100, Math.max(24, 100 - paidStops.length * 16));
+
+  return [
+    {
+      label: "Pace",
+      detail: getPaceLabel(stops.length),
+      value: paceValue,
+      Icon: Clock3,
+    },
+    {
+      label: "Variety",
+      detail: `${categories.size || 1} themes`,
+      value: varietyValue,
+      Icon: Compass,
+    },
+    {
+      label: "Food",
+      detail: `${foodStops.length} stops`,
+      value: foodValue,
+      Icon: Utensils,
+    },
+    {
+      label: "Budget",
+      detail: bookingStops.length ? `${bookingStops.length} prep items` : "easy day",
+      value: spendValue,
+      Icon: Wallet,
+    },
+  ];
+}
+
+function getPaceLabel(stopCount) {
+  if (stopCount <= 2) {
+    return "relaxed";
+  }
+
+  if (stopCount <= 4) {
+    return "balanced";
+  }
+
+  return "full day";
 }
 
 async function readJson(response) {
